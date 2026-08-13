@@ -16,32 +16,39 @@ Adafruit_USBD_HID usbHid(
 
 BLEHidAdafruit bleHid;
 
+static bool bleStarted = false;
+
 void HIDManager::begin()
 {
     usbHid.begin();
-
-    Bluefruit.begin();
-    Bluefruit.setTxPower(4);
-    Bluefruit.setName(AIR_MOUSE_NAME);
-
-    bleHid.begin();
-
-    Bluefruit.Advertising.addFlags(
-        BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE
-    );
-    Bluefruit.Advertising.addTxPower();
-    Bluefruit.Advertising.addAppearance(BLE_APPEARANCE_HID_MOUSE);
-    Bluefruit.Advertising.addService(bleHid);
-    Bluefruit.Advertising.addName();
-    Bluefruit.Advertising.restartOnDisconnect(true);
-    Bluefruit.Advertising.setInterval(32, 244);
-    Bluefruit.Advertising.setFastTimeout(30);
-    Bluefruit.Advertising.start(0);
 }
 
 void HIDManager::setConnection(ConnectionMode mode)
 {
     currentConnection = mode;
+
+    if (mode == CONNECTION_BLE && !bleStarted)
+    {
+        Bluefruit.begin();
+        Bluefruit.setTxPower(4);
+        Bluefruit.setName(AIR_MOUSE_NAME);
+
+        bleHid.begin();
+
+        Bluefruit.Advertising.addFlags(
+            BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE
+        );
+        Bluefruit.Advertising.addTxPower();
+        Bluefruit.Advertising.addAppearance(BLE_APPEARANCE_HID_MOUSE);
+        Bluefruit.Advertising.addService(bleHid);
+        Bluefruit.Advertising.addName();
+        Bluefruit.Advertising.restartOnDisconnect(true);
+        Bluefruit.Advertising.setInterval(32, 244);
+        Bluefruit.Advertising.setFastTimeout(30);
+        Bluefruit.Advertising.start(0);
+
+        bleStarted = true;
+    }
 }
 
 void HIDManager::move(float x, float y)
@@ -69,9 +76,8 @@ void HIDManager::move(float x, float y)
         if (usbHid.ready())
             usbHid.mouseMove(0, moveX, moveY);
     }
-    else
+    else if (bleStarted && Bluefruit.connected())
     {
-        if (Bluefruit.connected())
-            bleHid.mouseMove(moveX, moveY);
+        bleHid.mouseMove(moveX, moveY);
     }
 }
