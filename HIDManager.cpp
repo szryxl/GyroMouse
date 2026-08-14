@@ -16,7 +16,7 @@ Adafruit_USBD_HID usbHid(
 
 BLEHidAdafruit bleHid;
 
-static bool bleStarted = false;
+static bool bleInitialized = false;
 
 void HIDManager::begin()
 {
@@ -27,7 +27,7 @@ void HIDManager::setConnection(ConnectionMode mode)
 {
     currentConnection = mode;
 
-    if (mode == CONNECTION_BLE && !bleStarted)
+    if (mode == CONNECTION_BLE && !bleInitialized)
     {
         Bluefruit.begin();
         Bluefruit.setTxPower(4);
@@ -38,23 +38,28 @@ void HIDManager::setConnection(ConnectionMode mode)
         Bluefruit.Advertising.addFlags(
             BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE
         );
+
         Bluefruit.Advertising.addTxPower();
         Bluefruit.Advertising.addAppearance(BLE_APPEARANCE_HID_MOUSE);
         Bluefruit.Advertising.addService(bleHid);
         Bluefruit.Advertising.addName();
+
         Bluefruit.Advertising.restartOnDisconnect(true);
         Bluefruit.Advertising.setInterval(32, 244);
         Bluefruit.Advertising.setFastTimeout(30);
         Bluefruit.Advertising.start(0);
 
-        bleStarted = true;
+        bleInitialized = true;
     }
 }
 
 void HIDManager::move(float x, float y)
 {
-    if (fabs(x) < MOUSE_DEADZONE) x = 0.0f;
-    if (fabs(y) < MOUSE_DEADZONE) y = 0.0f;
+    if (fabs(x) < MOUSE_DEADZONE)
+        x = 0.0f;
+
+    if (fabs(y) < MOUSE_DEADZONE)
+        y = 0.0f;
 
     accumX += x * DEFAULT_SENSITIVITY;
     accumY += y * DEFAULT_SENSITIVITY;
@@ -71,13 +76,21 @@ void HIDManager::move(float x, float y)
     moveX = constrain(moveX, -127, 127);
     moveY = constrain(moveY, -127, 127);
 
+    Serial.print("HID ");
+    Serial.print(currentConnection == CONNECTION_WIRED ? "WIRED" : "BLE");
+    Serial.print(" X=");
+    Serial.print(moveX);
+    Serial.print(" Y=");
+    Serial.println(moveY);
+
     if (currentConnection == CONNECTION_WIRED)
     {
         if (usbHid.ready())
             usbHid.mouseMove(0, moveX, moveY);
-    }
-    else if (bleStarted && Bluefruit.connected())
+          
+    else if (currentConnection == CONNECTION_BLE)
     {
-        bleHid.mouseMove(moveX, moveY);
+        if (bleInitialized && Bluefruit.connected())
+            bleHid.mouseMove(moveX, moveY);
     }
 }

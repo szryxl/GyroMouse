@@ -16,8 +16,16 @@ void setup()
     sensor.begin();
     motion.begin();
     hid.begin();
-
     commands.begin(sensor, motion, hid);
+
+    delay(500);
+
+    Serial.println("Startup calibration...");
+    Serial.println("Keep still for 1 second.");
+
+    motion.calibrate(sensor, true);
+
+    Serial.println("Calibration completed.");
 }
 
 void loop()

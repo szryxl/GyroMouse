@@ -3,20 +3,20 @@
 #include "GamepadMotion.hpp"
 #include "Config.h"
 
-class MotionEngine {
+class Sensor;
+
+class MotionEngine
+{
 public:
     void begin();
     void update(float gx, float gy, float gz, float ax, float ay, float az, float dt);
     void getMouseMotion(float &x, float &y);
     void setSpace(MotionSpace space);
-    bool startCalibration();
-    bool updateCalibration();
+    void calibrate(Sensor &sensor, bool startup = false);
 
 private:
     GamepadMotion motion;
     MotionSpace currentSpace = SPACE_WORLD;
-    bool calibrationActive = false;
-    unsigned long calibrationStart = 0;
 
     void worldSpace(float &x, float &y);
     void localSpace(float &x, float &y);

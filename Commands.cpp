@@ -20,9 +20,6 @@ void Commands::update()
         else
             index = 0;
     }
-
-    if (motion->updateCalibration())
-        Serial.println("Calibration completed.");
 }
 
 void Commands::process()
@@ -64,10 +61,9 @@ void Commands::process()
     }
     else if (!strcmp(buffer, "mcal"))
     {
-        if (motion->startCalibration())
-            Serial.println("Calibration started. Keep still for 1 second.");
-        else
-            Serial.println("Calibration already running.");
+        Serial.println("Calibration started. Keep still.");
+        motion->calibrate(*sensor);
+        Serial.println("Calibration completed.");
     }
     else if (!strcmp(buffer, "r") || !strcmp(buffer, "R"))
     {

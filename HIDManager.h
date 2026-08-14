@@ -1,8 +1,10 @@
 #pragma once
+
 #include <Arduino.h>
 #include "Config.h"
 
-class HIDManager {
+class HIDManager
+{
 public:
     void begin();
     void move(float x, float y);
@@ -10,6 +12,9 @@ public:
 
 private:
     ConnectionMode currentConnection = CONNECTION_WIRED;
+
     float accumX = 0.0f;
     float accumY = 0.0f;
+
+    bool bleInitialized = false;
 };

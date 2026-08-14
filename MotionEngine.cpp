@@ -1,4 +1,5 @@
 #include "MotionEngine.h"
+#include "Sensor.h"
 
 void MotionEngine::begin()
 {
@@ -6,6 +7,55 @@ void MotionEngine::begin()
         GamepadMotionHelpers::CalibrationMode::Stillness |
         GamepadMotionHelpers::CalibrationMode::SensorFusion
     );
+}
+
+void MotionEngine::calibrate(Sensor &sensor, bool startup)
+{
+    if (startup)
+    {
+        for (int i = 0; i < 200; i++)
+        {
+            if (sensor.read())
+            {
+                motion.ProcessMotion(
+                    -sensor.gy,
+                     sensor.gz,
+                    -sensor.gx,
+                    -sensor.ay,
+                     sensor.az,
+                    -sensor.ax,
+                    0.01f
+                );
+            }
+
+            delay(10);
+        }
+    }
+
+    motion.ResetContinuousCalibration();
+    motion.StartContinuousCalibration();
+
+    unsigned long start = millis();
+
+    while ((unsigned long)(millis() - start) < 1000)
+    {
+        if (sensor.read())
+        {
+            motion.ProcessMotion(
+                -sensor.gy,
+                 sensor.gz,
+                -sensor.gx,
+                -sensor.ay,
+                 sensor.az,
+                -sensor.ax,
+                sensor.deltaTime
+            );
+        }
+
+        delay(1);
+    }
+
+    motion.PauseContinuousCalibration();
 }
 
 void MotionEngine::update(float gx, float gy, float gz, float ax, float ay, float az, float dt)
@@ -18,34 +68,6 @@ void MotionEngine::setSpace(MotionSpace space)
     currentSpace = space;
 }
 
-bool MotionEngine::startCalibration()
-{
-    if (calibrationActive)
-        return false;
-
-    motion.ResetContinuousCalibration();
-    motion.StartContinuousCalibration();
-
-    calibrationActive = true;
-    calibrationStart = millis();
-
-    return true;
-}
-
-bool MotionEngine::updateCalibration()
-{
-    if (!calibrationActive)
-        return false;
-
-    if (millis() - calibrationStart < 1000)
-        return false;
-
-    motion.PauseContinuousCalibration();
-    calibrationActive = false;
-
-    return true;
-}
-
 void MotionEngine::getMouseMotion(float &x, float &y)
 {
     x = 0.0f;
@@ -53,9 +75,9 @@ void MotionEngine::getMouseMotion(float &x, float &y)
 
     switch (currentSpace)
     {
-        case SPACE_WORLD:  worldSpace(x, y);  break;
-        case SPACE_LOCAL:  localSpace(x, y);  break;
-        case SPACE_WAND:   wandSpace(x, y);   break;
+        case SPACE_WORLD: worldSpace(x, y); break;
+        case SPACE_LOCAL: localSpace(x, y); break;
+        case SPACE_WAND: wandSpace(x, y); break;
         case SPACE_PLAYER: playerSpace(x, y); break;
     }
 }
@@ -64,7 +86,6 @@ void MotionEngine::worldSpace(float &x, float &y)
 {
     float gx, gy;
     motion.GetWorldSpaceGyro(gx, gy);
-
     x = -gy;
     y = -gx;
 }
@@ -73,7 +94,6 @@ void MotionEngine::localSpace(float &x, float &y)
 {
     float gx, gy, gz;
     motion.GetCalibratedGyro(gx, gy, gz);
-
     x = -gy;
     y = -gx;
 }
@@ -82,21 +102,18 @@ void MotionEngine::playerSpace(float &x, float &y)
 {
     float gx, gy;
     motion.GetPlayerSpaceGyro(gx, gy);
-
     x = -gy;
     y = -gx;
 }
 
 void MotionEngine::wandSpace(float &x, float &y)
 {
-    float gX, gY, gZ;
-    float cgX, cgY, cgZ;
+    float gX, gY, gZ, cgX, cgY, cgZ;
 
     motion.GetGravity(gX, gY, gZ);
     motion.GetCalibratedGyro(cgX, cgY, cgZ);
 
     float dotFG = -gZ;
-
     float fX = -dotFG * gX;
     float fY = -dotFG * gY;
     float fZ = -1.0f - dotFG * gZ;
