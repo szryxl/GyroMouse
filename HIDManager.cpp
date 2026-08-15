@@ -23,6 +23,11 @@ void HIDManager::begin()
     usbHid.begin();
 }
 
+void HIDManager::setSensitivity(float value)
+{
+    sensitivity = value;
+}
+
 void HIDManager::setConnection(ConnectionMode mode)
 {
     currentConnection = mode;
@@ -61,8 +66,8 @@ void HIDManager::move(float x, float y)
     if (fabs(y) < MOUSE_DEADZONE)
         y = 0.0f;
 
-    accumX += x * DEFAULT_SENSITIVITY;
-    accumY += y * DEFAULT_SENSITIVITY;
+    accumX += x * sensitivity;
+    accumY += y * sensitivity;
 
     int16_t moveX = (int16_t)accumX;
     int16_t moveY = (int16_t)accumY;

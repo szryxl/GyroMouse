@@ -59,6 +59,15 @@ void Commands::process()
         hid->setConnection(CONNECTION_BLE);
         Serial.println("Connection: BLE");
     }
+    else if (!strncmp(buffer, "SENS ", 5))
+    {
+        float value = atof(buffer + 5);
+
+        hid->setSensitivity(value);
+
+        Serial.print("Sensitivity: ");
+        Serial.println(value, 3);
+    }
     else if (!strcmp(buffer, "mcal"))
     {
         Serial.println("Calibration started. Keep still.");

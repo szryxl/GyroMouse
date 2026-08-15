@@ -1,7 +1,7 @@
 #pragma once
 
 #define AIR_MOUSE_NAME "AirMouseBLE"
-#define DEFAULT_SENSITIVITY 0.05f
+#define DEFAULT_SENSITIVITY 0.2f
 #define MOUSE_DEADZONE 0.10f
 #define IMU_ADDRESS 0x6A
 
