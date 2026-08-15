@@ -76,18 +76,11 @@ void HIDManager::move(float x, float y)
     moveX = constrain(moveX, -127, 127);
     moveY = constrain(moveY, -127, 127);
 
-    Serial.print("HID ");
-    Serial.print(currentConnection == CONNECTION_WIRED ? "WIRED" : "BLE");
-    Serial.print(" X=");
-    Serial.print(moveX);
-    Serial.print(" Y=");
-    Serial.println(moveY);
-
     if (currentConnection == CONNECTION_WIRED)
     {
         if (usbHid.ready())
             usbHid.mouseMove(0, moveX, moveY);
-          
+    }
     else if (currentConnection == CONNECTION_BLE)
     {
         if (bleInitialized && Bluefruit.connected())
