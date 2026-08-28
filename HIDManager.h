@@ -12,7 +12,7 @@ public:
     void setSensitivity(float value);
 
 private:
-    ConnectionMode currentConnection = CONNECTION_WIRED;
+    ConnectionMode currentConnection = CONNECTION_BLE;
 
     float sensitivity = DEFAULT_SENSITIVITY;
 
